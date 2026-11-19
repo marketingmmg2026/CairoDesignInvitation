@@ -157,7 +157,27 @@
   .stat b{display:block;font-size:42px;font-weight:600}
   .stat span{font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.75}
   .card small{opacity:.6;font-size:12px}
-  .card button{margin-top:16px}
+  .card > button{margin-top:16px}
+  .card{max-height:92vh;max-height:92dvh;display:flex;flex-direction:column}
+  .stat{font-family:inherit;color:#fff;border:1px solid transparent;cursor:pointer;transition:background .25s,border-color .25s}
+  .stat:hover{background:rgba(255,255,255,.12)}
+  .stat.active{border-color:var(--gold);background:rgba(233,201,139,.12)}
+  .stat span::after{content:" ▾";opacity:.6}
+  .pinbox{display:none;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+  .pinbox.show{display:flex}
+  .pinbox input{flex:1 1 160px;padding:13px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);color:#fff;font-family:inherit;font-size:15px;text-align:center;outline:none}
+  .pinbox .btn{min-width:0;padding:13px 18px;letter-spacing:.15em;font-size:12px}
+  .pinbox .nameerr{flex-basis:100%}
+  .names{display:none;text-align:left;margin-bottom:14px;min-height:0;flex:1 1 auto;overflow:hidden;flex-direction:column}
+  .names.show{display:flex}
+  .names-head{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);padding:0 4px 10px;border-bottom:1px solid rgba(255,255,255,.15)}
+  .names ol{list-style:none;overflow-y:auto;max-height:38vh;max-height:38dvh;counter-reset:n}
+  .names li{counter-increment:n;display:flex;justify-content:space-between;gap:12px;padding:11px 4px;border-bottom:1px solid rgba(255,255,255,.08);font-size:15px}
+  .names li::before{content:counter(n)".";opacity:.45;min-width:26px}
+  .names li span{flex:1}
+  .names li time{opacity:.5;font-size:12px;white-space:nowrap}
+  .names .empty{opacity:.6;font-size:14px;justify-content:center}
+  .names .empty::before{content:none}
 
   @media (orientation:landscape) and (min-width:900px){
     .bg{background-position:center 62%}
@@ -226,8 +246,17 @@
   <div class="card">
     <h3>RSVP Count</h3>
     <div class="stats">
-      <div class="stat"><b id="cYes">–</b><span>Attending</span></div>
-      <div class="stat"><b id="cNo">–</b><span>Not attending</span></div>
+      <button class="stat" data-list="attending"><b id="cYes">–</b><span>Attending</span></button>
+      <button class="stat" data-list="not_attending"><b id="cNo">–</b><span>Not attending</span></button>
+    </div>
+    <div class="pinbox" id="pinBox">
+      <input id="pinIn" type="password" inputmode="text" placeholder="Admin PIN" autocomplete="off">
+      <button class="btn no" id="pinGo">Show names</button>
+      <div class="nameerr" id="pinErr">Wrong PIN</div>
+    </div>
+    <div class="names" id="namesBox">
+      <div class="names-head" id="namesHead"></div>
+      <ol id="namesList"></ol>
     </div>
     <small id="adminNote">Loading…</small><br>
     <button class="btn no" id="refresh">Refresh</button>
@@ -336,14 +365,50 @@ async function loadCounts(){
     note.textContent='Total: '+(j.attending+j.not_attending)+' · updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){note.textContent='Could not load counts — retrying…'}
 }
+/* names list (protected by PIN) */
+let openList=null;
+const pinBox=document.getElementById('pinBox'), pinIn=document.getElementById('pinIn'), pinErr=document.getElementById('pinErr');
+const namesBox=document.getElementById('namesBox'), namesList=document.getElementById('namesList'), namesHead=document.getElementById('namesHead');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function loadNames(){
+  if(!openList||!READY) return;
+  const pin=store('mm_pin');
+  if(!pin){ pinBox.classList.add('show'); namesBox.classList.remove('show'); return; }
+  try{
+    const rows=await rpc('rsvp_names',{p_pin:pin,p_status:openList})||[];
+    pinBox.classList.remove('show'); pinErr.classList.remove('show');
+    namesHead.textContent=(openList==='attending'?'Attending':'Not attending')+' · '+rows.length;
+    namesList.innerHTML=rows.length?rows.map(r=>'<li><span>'+esc(r.name||'—')+'</span><time>'+
+      new Date(r.updated_at).toLocaleString([], {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+'</time></li>').join('')
+      :'<li class="empty">No one yet</li>';
+    namesBox.classList.add('show');
+  }catch(e){
+    if(String(e.message)==='400'||String(e.message)==='401'||String(e.message)==='403'){
+      try{localStorage.removeItem('mm_pin')}catch(_){}
+      pinBox.classList.add('show'); pinErr.classList.add('show'); namesBox.classList.remove('show');
+    }
+  }
+}
+document.querySelectorAll('.stat').forEach(s=>s.addEventListener('click',()=>{
+  const k=s.dataset.list;
+  if(openList===k){ openList=null; s.classList.remove('active'); namesBox.classList.remove('show'); pinBox.classList.remove('show'); return; }
+  openList=k;
+  document.querySelectorAll('.stat').forEach(x=>x.classList.toggle('active',x===s));
+  loadNames();
+}));
+function submitPin(){ const v=pinIn.value.trim(); if(!v) return; store('mm_pin',v); pinIn.value=''; loadNames(); }
+document.getElementById('pinGo').onclick=submitPin;
+pinIn.addEventListener('keydown',e=>{ if(e.key==='Enter') submitPin(); });
+
+function refreshAll(){ loadCounts(); loadNames(); }
 let adminTimer=null;
 function route(){
   const on=location.hash==='#admin';
   document.getElementById('admin').classList.toggle('on',on);
   clearInterval(adminTimer);
-  if(on){ loadCounts(); adminTimer=setInterval(loadCounts,5000); }  // auto-refresh every 5 seconds
+  if(on){ refreshAll(); adminTimer=setInterval(refreshAll,5000); }  // auto-refresh every 5 seconds
 }
-document.getElementById('refresh').onclick=loadCounts;
+document.getElementById('refresh').onclick=refreshAll;
 addEventListener('hashchange',route); route();
 </script>
 </body>
