@@ -163,11 +163,6 @@
   .stat:hover{background:rgba(255,255,255,.12)}
   .stat.active{border-color:var(--gold);background:rgba(233,201,139,.12)}
   .stat span::after{content:" ▾";opacity:.6}
-  .pinbox{display:none;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
-  .pinbox.show{display:flex}
-  .pinbox input{flex:1 1 160px;padding:13px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);color:#fff;font-family:inherit;font-size:15px;text-align:center;outline:none}
-  .pinbox .btn{min-width:0;padding:13px 18px;letter-spacing:.15em;font-size:12px}
-  .pinbox .nameerr{flex-basis:100%}
   .names{display:none;text-align:left;margin-bottom:14px;min-height:0;flex:1 1 auto;overflow:hidden;flex-direction:column}
   .names.show{display:flex}
   .names-head{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);padding:0 4px 10px;border-bottom:1px solid rgba(255,255,255,.15)}
@@ -248,11 +243,6 @@
     <div class="stats">
       <button class="stat" data-list="attending"><b id="cYes">–</b><span>Attending</span></button>
       <button class="stat" data-list="not_attending"><b id="cNo">–</b><span>Not attending</span></button>
-    </div>
-    <div class="pinbox" id="pinBox">
-      <input id="pinIn" type="password" inputmode="text" placeholder="Admin PIN" autocomplete="off">
-      <button class="btn no" id="pinGo">Show names</button>
-      <div class="nameerr" id="pinErr">Wrong PIN</div>
     </div>
     <div class="names" id="namesBox">
       <div class="names-head" id="namesHead"></div>
@@ -365,40 +355,28 @@ async function loadCounts(){
     note.textContent='Total: '+(j.attending+j.not_attending)+' · updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(e){note.textContent='Could not load counts — retrying…'}
 }
-/* names list (protected by PIN) */
+/* names list */
 let openList=null;
-const pinBox=document.getElementById('pinBox'), pinIn=document.getElementById('pinIn'), pinErr=document.getElementById('pinErr');
 const namesBox=document.getElementById('namesBox'), namesList=document.getElementById('namesList'), namesHead=document.getElementById('namesHead');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function loadNames(){
   if(!openList||!READY) return;
-  const pin=store('mm_pin');
-  if(!pin){ pinBox.classList.add('show'); namesBox.classList.remove('show'); return; }
   try{
-    const rows=await rpc('rsvp_names',{p_pin:pin,p_status:openList})||[];
-    pinBox.classList.remove('show'); pinErr.classList.remove('show');
+    const rows=await rpc('rsvp_names',{p_status:openList})||[];
     namesHead.textContent=(openList==='attending'?'Attending':'Not attending')+' · '+rows.length;
     namesList.innerHTML=rows.length?rows.map(r=>'<li><span>'+esc(r.name||'—')+'</span><time>'+
       new Date(r.updated_at).toLocaleString([], {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})+'</time></li>').join('')
       :'<li class="empty">No one yet</li>';
     namesBox.classList.add('show');
-  }catch(e){
-    if(String(e.message)==='400'||String(e.message)==='401'||String(e.message)==='403'){
-      try{localStorage.removeItem('mm_pin')}catch(_){}
-      pinBox.classList.add('show'); pinErr.classList.add('show'); namesBox.classList.remove('show');
-    }
-  }
+  }catch(e){}
 }
 document.querySelectorAll('.stat').forEach(s=>s.addEventListener('click',()=>{
   const k=s.dataset.list;
-  if(openList===k){ openList=null; s.classList.remove('active'); namesBox.classList.remove('show'); pinBox.classList.remove('show'); return; }
+  if(openList===k){ openList=null; s.classList.remove('active'); namesBox.classList.remove('show'); return; }
   openList=k;
   document.querySelectorAll('.stat').forEach(x=>x.classList.toggle('active',x===s));
   loadNames();
 }));
-function submitPin(){ const v=pinIn.value.trim(); if(!v) return; store('mm_pin',v); pinIn.value=''; loadNames(); }
-document.getElementById('pinGo').onclick=submitPin;
-pinIn.addEventListener('keydown',e=>{ if(e.key==='Enter') submitPin(); });
 
 function refreshAll(){ loadCounts(); loadNames(); }
 let adminTimer=null;
