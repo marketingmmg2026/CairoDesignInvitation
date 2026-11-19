@@ -174,7 +174,7 @@
       <div class="details">
         <div class="event">Cairo Design Week</div>
         <div class="place">Egyptian Museum</div>
-        <div class="date">20 — 28 NOV 2026</div>
+        <div class="date">21 NOV 2026</div>
         <div class="countdown" id="countdown">
           <div><b id="cdD">00</b><span>Days</span></div>
           <div><b id="cdH">00</b><span>Hours</span></div>
@@ -194,7 +194,7 @@
     <div class="rsvp">
       <div class="small">MARMONIL</div>
       <h2>Confirm your attendance</h2>
-      <p>Cairo Design Week · 20 — 28 Nov</p>
+      <p>Cairo Design Week · 21 Nov 2026</p>
       <div class="btns">
         <button class="btn yes" data-status="attending">Attending</button>
         <button class="btn no" data-status="not_attending">Not Attending</button>
@@ -245,8 +245,8 @@ function rpc(name, body){
 })();
 
 /* countdown — Cairo time (UTC+2) */
-const START = new Date("2026-11-20T00:00:00+02:00");
-const END   = new Date("2026-11-29T00:00:00+02:00");
+const START = new Date("2026-11-21T00:00:00+02:00");
+const END   = new Date("2026-11-22T00:00:00+02:00");
 (function(){
   const box=document.getElementById('countdown'), live=document.getElementById('cdLive');
   const pad=n=>String(n).padStart(2,'0');
@@ -254,7 +254,7 @@ const END   = new Date("2026-11-29T00:00:00+02:00");
     const now=Date.now(), diff=START-now;
     if(diff<=0){
       box.style.display='none'; live.style.display='block';
-      live.textContent = now<END ? 'Now open · until 28 Nov' : 'Thank you for visiting';
+      live.textContent = now<END ? 'Today · See you there' : 'Thank you for visiting';
       return;
     }
     const s=Math.floor(diff/1000);
