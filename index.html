@@ -28,11 +28,11 @@
 
   .pages{
     height:100vh;height:100dvh;
-    overflow-y:auto;scroll-snap-type:y mandatory;scroll-behavior:smooth;
+    overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;scroll-behavior:smooth;
   }
   .page{
     position:relative;height:100vh;height:100dvh;width:100%;
-    scroll-snap-align:start;overflow:hidden;
+    scroll-snap-align:start;overflow:hidden;overflow:clip;
     display:flex;flex-direction:column;align-items:center;
   }
   .bg{
@@ -131,6 +131,17 @@
   .btn.yes:hover{background:var(--gold);border-color:var(--gold)}
   .btn.no:hover{background:rgba(255,255,255,.18)}
   .btn:disabled{opacity:.5;cursor:default;transform:none}
+  .btn.locked{opacity:.4;cursor:not-allowed;transform:none}
+  .namebox{margin:26px auto 4px;max-width:380px}
+  #guestName{width:100%;padding:16px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.55);
+    background:rgba(255,255,255,.08);color:#fff;font-family:inherit;font-size:16px;letter-spacing:.06em;text-align:center;outline:none;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:border-color .3s,background .3s}
+  #guestName::placeholder{color:rgba(255,255,255,.6);letter-spacing:.18em;text-transform:uppercase;font-size:13px}
+  #guestName:focus{border-color:var(--gold);background:rgba(255,255,255,.12)}
+  #guestName.bad{border-color:#ff8a7a;animation:shake .35s}
+  @keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  .nameerr{height:18px;margin-top:8px;font-size:12px;letter-spacing:.1em;color:#ff9f92;opacity:0;transition:opacity .3s}
+  .nameerr.show{opacity:1}
   .msg{margin-top:26px;min-height:22px;font-size:14px;letter-spacing:.08em;color:var(--gold);opacity:0;transition:opacity .5s}
   .msg.show{opacity:1}
   .change{display:none;margin-top:12px;background:none;border:0;color:rgba(255,255,255,.7);font-family:inherit;font-size:12px;letter-spacing:.15em;text-decoration:underline;cursor:pointer}
@@ -193,6 +204,10 @@
     <div class="bg"></div>
     <div class="rsvp">
       <div class="small">MARMONIL</div>
+      <div class="namebox">
+        <input id="guestName" type="text" placeholder="Enter your name" autocomplete="name" maxlength="80" required>
+        <div class="nameerr" id="nameErr">Please enter your name first</div>
+      </div>
       <h2>Confirm your attendance</h2>
       <p>Cairo Design Week · 21 Nov 2026</p>
       <div class="btns">
@@ -274,26 +289,39 @@ if(!id){ id=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().
 const msg=document.getElementById('msg'), change=document.getElementById('change');
 const btns=[...document.querySelectorAll('.rsvp .btn')];
 const TEXT={attending:"Thank you — we look forward to seeing you!",not_attending:"Thank you for letting us know. You'll be missed."};
+const nameIn=document.getElementById('guestName'), nameErr=document.getElementById('nameErr'), nameBox=nameIn.parentElement;
+const nameOk=()=>nameIn.value.trim().length>=2;
+function lockBtns(){ btns.forEach(b=>b.classList.toggle('locked',!nameOk())); }
+nameIn.value=store('mm_name')||''; lockBtns();
+nameIn.addEventListener('input',()=>{ lockBtns(); if(nameOk()){nameErr.classList.remove('show');nameIn.classList.remove('bad');} });
 
 function showDone(status){
-  btns.forEach(b=>b.style.display='none');
-  msg.textContent=TEXT[status]; msg.classList.add('show');
+  btns.forEach(b=>b.style.display='none'); nameBox.style.display='none';
+  const n=(store('mm_name')||'').split(' ')[0];
+  msg.textContent=(n?n+', ':'')+TEXT[status].charAt(0).toLowerCase()+TEXT[status].slice(1);
+  if(!n) msg.textContent=TEXT[status];
+  msg.classList.add('show');
   change.style.display='inline-block';
 }
 const prev=store('mm_status'); if(prev && TEXT[prev]) showDone(prev);
 
-change.onclick=()=>{btns.forEach(b=>{b.style.display='';b.disabled=false});msg.classList.remove('show');change.style.display='none'};
+change.onclick=()=>{btns.forEach(b=>{b.style.display='';b.disabled=false});nameBox.style.display='';lockBtns();msg.classList.remove('show');change.style.display='none'};
 
 btns.forEach(b=>b.addEventListener('click',async()=>{
-  const status=b.dataset.status;
-  btns.forEach(x=>x.disabled=true);
+  if(!nameOk()){
+    nameErr.classList.add('show'); nameIn.classList.remove('bad'); void nameIn.offsetWidth; nameIn.classList.add('bad'); nameIn.focus();
+    return;
+  }
+  const status=b.dataset.status, name=nameIn.value.trim().replace(/\s+/g,' ');
+  btns.forEach(x=>x.disabled=true); nameIn.disabled=true;
   msg.textContent='Sending…'; msg.classList.add('show');
   try{
-    if(READY){ await rpc('submit_rsvp',{p_id:id,p_status:status}); }
-    store('mm_status',status); showDone(status);
+    if(READY){ await rpc('submit_rsvp',{p_id:id,p_status:status,p_name:name}); }
+    store('mm_name',name); store('mm_status',status); showDone(status);
   }catch(e){
-    msg.textContent='Connection problem, please try again.'; btns.forEach(x=>x.disabled=false);
+    msg.textContent='Connection problem, please try again.';
   }
+  btns.forEach(x=>x.disabled=false); nameIn.disabled=false;
 }));
 
 /* admin view: open the site link with #admin at the end */
