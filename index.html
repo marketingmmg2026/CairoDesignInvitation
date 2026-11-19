@@ -90,6 +90,12 @@
   .details .event{font-weight:600;font-size:clamp(15px,4.2vw,24px);letter-spacing:.32em;text-transform:uppercase}
   .details .place{font-weight:300;font-size:clamp(13px,3.6vw,19px);letter-spacing:.22em;text-transform:uppercase;margin-top:10px;opacity:.9}
   .details .date{font-weight:500;font-size:clamp(13px,3.6vw,18px);letter-spacing:.3em;margin-top:18px;color:var(--gold)}
+  .countdown{display:flex;justify-content:center;gap:clamp(10px,3vw,22px);margin-top:26px}
+  .countdown div{min-width:clamp(58px,15vw,84px);padding:12px 6px 10px;border:1px solid rgba(255,255,255,.22);border-radius:14px;
+    background:rgba(10,12,16,.28);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+  .countdown b{display:block;font-weight:500;font-size:clamp(22px,6.5vw,36px);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+  .countdown span{display:block;margin-top:4px;font-size:clamp(9px,2.4vw,11px);letter-spacing:.25em;text-transform:uppercase;opacity:.7}
+  .cd-live{display:none;margin-top:24px;font-weight:600;font-size:clamp(13px,3.6vw,16px);letter-spacing:.3em;text-transform:uppercase;color:var(--gold)}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
   .hint{
@@ -169,6 +175,13 @@
         <div class="event">Cairo Design Week</div>
         <div class="place">Egyptian Museum</div>
         <div class="date">20 — 28 NOV 2026</div>
+        <div class="countdown" id="countdown">
+          <div><b id="cdD">00</b><span>Days</span></div>
+          <div><b id="cdH">00</b><span>Hours</span></div>
+          <div><b id="cdM">00</b><span>Min</span></div>
+          <div><b id="cdS">00</b><span>Sec</span></div>
+        </div>
+        <div class="cd-live" id="cdLive"></div>
       </div>
     </div>
 
@@ -231,6 +244,28 @@ function rpc(name, body){
   }
 })();
 
+/* countdown — Cairo time (UTC+2) */
+const START = new Date("2026-11-20T00:00:00+02:00");
+const END   = new Date("2026-11-29T00:00:00+02:00");
+(function(){
+  const box=document.getElementById('countdown'), live=document.getElementById('cdLive');
+  const pad=n=>String(n).padStart(2,'0');
+  function tick(){
+    const now=Date.now(), diff=START-now;
+    if(diff<=0){
+      box.style.display='none'; live.style.display='block';
+      live.textContent = now<END ? 'Now open · until 28 Nov' : 'Thank you for visiting';
+      return;
+    }
+    const s=Math.floor(diff/1000);
+    document.getElementById('cdD').textContent=pad(Math.floor(s/86400));
+    document.getElementById('cdH').textContent=pad(Math.floor(s%86400/3600));
+    document.getElementById('cdM').textContent=pad(Math.floor(s%3600/60));
+    document.getElementById('cdS').textContent=pad(s%60);
+  }
+  tick(); setInterval(tick,1000);
+})();
+
 /* device id so one phone = one answer (re-answering updates it) */
 function store(k,v){try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v);}catch(e){return null}}
 let id=store('mm_id');
@@ -265,18 +300,19 @@ btns.forEach(b=>b.addEventListener('click',async()=>{
 async function loadCounts(){
   const note=document.getElementById('adminNote');
   if(!READY){note.textContent='Add your Supabase URL and key to see counts.';return}
-  note.textContent='Loading…';
   try{
     let j=await rpc('rsvp_counts'); if(Array.isArray(j)) j=j[0];
     document.getElementById('cYes').textContent=j.attending;
     document.getElementById('cNo').textContent=j.not_attending;
-    note.textContent='Total responses: '+(j.attending+j.not_attending);
-  }catch(e){note.textContent='Could not load counts.'}
+    note.textContent='Total: '+(j.attending+j.not_attending)+' · updated '+new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }catch(e){note.textContent='Could not load counts — retrying…'}
 }
+let adminTimer=null;
 function route(){
   const on=location.hash==='#admin';
   document.getElementById('admin').classList.toggle('on',on);
-  if(on) loadCounts();
+  clearInterval(adminTimer);
+  if(on){ loadCounts(); adminTimer=setInterval(loadCounts,5000); }  // auto-refresh every 5 seconds
 }
 document.getElementById('refresh').onclick=loadCounts;
 addEventListener('hashchange',route); route();
