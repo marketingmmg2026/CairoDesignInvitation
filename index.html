@@ -206,13 +206,12 @@
 </div>
 
 <script>
-
-const SUPABASE_URL = "https://xlopcvrjzbqfqmhorlpu.supabase.co/rest/v1/";
+/* ====== PUT YOUR SUPABASE DETAILS HERE ====== */
+const SUPABASE_URL = "https://xlopcvrjzbqfqmhorlpu.supabase.co";
 const SUPABASE_KEY = "sb_publishable_XcUzFVaIyJmdbkuos4kP9A_TQ286NTQ";
-
 const READY = !!(SUPABASE_URL && SUPABASE_KEY);
 function rpc(name, body){
-  return fetch(SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/rpc/'+name,{
+  return fetch(SUPABASE_URL.trim().replace(/\/+$/,'').replace(/\/rest\/v1$/,'')+'/rest/v1/rpc/'+name,{
     method:'POST',
     headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
     body:JSON.stringify(body||{})
