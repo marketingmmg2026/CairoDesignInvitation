@@ -87,10 +87,15 @@
     animation:grow 1.4s ease 3.2s forwards}
   @keyframes grow{to{width:min(260px,60vw)}}
   .details{opacity:0;animation:fadeUp 1.4s ease 3.5s forwards}
-  .details .event{font-weight:600;font-size:clamp(15px,4.2vw,24px);letter-spacing:.32em;text-transform:uppercase}
-  .details .place{font-weight:300;font-size:clamp(13px,3.6vw,19px);letter-spacing:.22em;text-transform:uppercase;margin-top:10px;opacity:.9}
-  .details .date{font-weight:500;font-size:clamp(13px,3.6vw,18px);letter-spacing:.3em;margin-top:18px;color:var(--gold)}
-  .countdown{display:flex;justify-content:center;gap:clamp(10px,3vw,22px);margin-top:26px}
+  .details .baladi{font-weight:600;font-size:clamp(26px,7.5vw,44px);letter-spacing:.42em;margin-right:-.42em;line-height:1}
+  .details .tagline{font-weight:300;font-style:italic;font-size:clamp(13px,3.6vw,18px);letter-spacing:.08em;color:var(--gold);margin-top:12px}
+  .details .event{font-weight:600;font-size:clamp(11px,3vw,14px);letter-spacing:.3em;text-transform:uppercase;margin-top:22px}
+  .details .place,.details .date{display:flex;align-items:center;justify-content:center;gap:8px;font-size:clamp(11px,3vw,14px);text-transform:uppercase;margin-top:9px}
+  .details .place{font-weight:300;letter-spacing:.18em;opacity:.92}
+  .details .date{font-weight:500;letter-spacing:.24em;color:var(--gold)}
+  .details svg{width:15px;height:15px;flex:none;fill:none;stroke:var(--gold);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .cd-label{margin-top:24px;font-size:clamp(10px,2.6vw,12px);font-weight:500;letter-spacing:.3em;text-transform:uppercase;opacity:.75}
+  .countdown{display:flex;justify-content:center;gap:clamp(10px,3vw,22px);margin-top:10px}
   .countdown div{min-width:clamp(58px,15vw,84px);padding:12px 6px 10px;border:1px solid rgba(255,255,255,.22);border-radius:14px;
     background:rgba(10,12,16,.28);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
   .countdown b{display:block;font-weight:500;font-size:clamp(22px,6.5vw,36px);letter-spacing:.04em;font-variant-numeric:tabular-nums}
@@ -113,11 +118,19 @@
 
   /* ---------- PAGE 2 ---------- */
   .p2 .bg{filter:blur(14px) brightness(.55);transform:scale(1.12)}
-  .p2{justify-content:center}
+  .p2{justify-content:center;height:auto;min-height:100vh;min-height:100dvh;
+    padding:calc(44px + env(safe-area-inset-top)) 0 calc(40px + env(safe-area-inset-bottom))}
+  .invite .lead{font-weight:300;font-size:clamp(15px,4.1vw,19px);line-height:1.65;letter-spacing:.02em;text-transform:none;opacity:1}
+  .invite .lead b{font-weight:600;letter-spacing:.14em;color:var(--gold)}
+  .invite .sub{font-weight:300;font-size:clamp(13px,3.5vw,15px);line-height:1.65;letter-spacing:.02em;text-transform:none;opacity:.78;margin-top:14px}
+  .nw{white-space:nowrap}
+  .divider{width:min(200px,50vw);height:1px;margin:28px auto 6px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+  .signoff{margin-top:34px}
+  .signoff span{display:block;font-weight:300;font-style:italic;font-size:clamp(13px,3.5vw,15px);letter-spacing:.04em;opacity:.85;margin-bottom:10px}
   .rsvp{position:relative;z-index:2;text-align:center;padding:0 24px;width:100%;max-width:560px}
   .rsvp .small{font-family:"Geo231","League Spartan",sans-serif;font-weight:800;letter-spacing:.18em;font-size:clamp(16px,4vw,20px);opacity:.9}
-  .rsvp h2{font-weight:300;font-size:clamp(26px,7vw,46px);letter-spacing:.06em;line-height:1.25;margin:18px 0 10px}
-  .rsvp p{font-weight:400;font-size:clamp(12px,3.2vw,14px);letter-spacing:.2em;text-transform:uppercase;opacity:.75}
+  .rsvp h2{font-weight:300;font-size:clamp(24px,6.4vw,40px);letter-spacing:.06em;line-height:1.25;margin:18px 0 10px}
+  .rsvp > p{font-weight:400;font-size:clamp(12px,3.2vw,14px);letter-spacing:.2em;text-transform:uppercase;opacity:.75}
   .btns{display:flex;gap:14px;justify-content:center;margin:14px auto 0;flex-wrap:wrap;max-width:420px}
   .btns .btn{flex:1 1 0;min-width:0;padding:17px 10px;white-space:nowrap;letter-spacing:.14em;font-size:clamp(11px,3.1vw,13px)}
   .btn{
@@ -204,9 +217,12 @@
       <h1 class="brand">MARMONIL</h1>
       <div class="line"></div>
       <div class="details">
-        <div class="event">Cairo Design Week</div>
-        <div class="place">Egyptian Museum</div>
-        <div class="date">21 NOV 2026</div>
+        <div class="baladi">BALADI</div>
+        <div class="tagline">Everyday Egypt. Set in Stone.</div>
+        <div class="event">Part of Cairo Design Week</div>
+        <div class="place"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>The Egyptian Museum, Tahrir</div>
+        <div class="date"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>20 — 28 NOV 2026</div>
+        <div class="cd-label" id="cdLabel">Exhibition ends in</div>
         <div class="countdown" id="countdown">
           <div><b id="cdD">00</b><span>Days</span></div>
           <div><b id="cdH">00</b><span>Hours</span></div>
@@ -224,9 +240,13 @@
   <section class="page p2" id="rsvp">
     <div class="bg"></div>
     <div class="rsvp">
-      <div class="small">MARMONIL</div>
+      <div class="invite">
+        <p class="lead">We would love to welcome you to <b>BALADI</b>, a special Marmonil installation celebrating the everyday icons, cherished traditions, and familiar details that make Egypt unmistakably Egyptian.</p>
+        <p class="sub">Discover a collection of nostalgic forms, reimagined in natural stone and brought to life through the art of craftsmanship.</p>
+      </div>
+      <div class="divider"></div>
       <h2>Confirm your attendance</h2>
-      <p>Cairo Design Week · 21 Nov 2026</p>
+      <p><span class="nw">BALADI · Cairo Design Week</span> <span class="nw">· 20 — 28 Nov 2026</span></p>
       <div class="namebox">
         <input id="guestName" type="text" placeholder="Enter your name" autocomplete="name" maxlength="80" required>
         <div class="nameerr" id="nameErr">Please enter your name first</div>
@@ -237,6 +257,10 @@
       </div>
       <div class="msg" id="msg"></div>
       <button class="change" id="change">Change my answer</button>
+      <div class="signoff">
+        <span>We look forward to seeing you there.</span>
+        <div class="small">MARMONIL</div>
+      </div>
     </div>
   </section>
 </main>
@@ -286,16 +310,16 @@ function rpc(name, body){
 })();
 
 /* countdown — Cairo time (UTC+2) */
-const START = new Date("2026-11-21T00:00:00+02:00");
-const END   = new Date("2026-11-22T00:00:00+02:00");
+// counts down to the END of the exhibition: 28 Nov 2026, midnight Cairo
+const END   = new Date("2026-11-29T00:00:00+02:00");
 (function(){
   const box=document.getElementById('countdown'), live=document.getElementById('cdLive');
   const pad=n=>String(n).padStart(2,'0');
   function tick(){
-    const now=Date.now(), diff=START-now;
+    const now=Date.now(), diff=END-now;
     if(diff<=0){
-      box.style.display='none'; live.style.display='block';
-      live.textContent = now<END ? 'Today · See you there' : 'Thank you for visiting';
+      box.style.display='none'; document.getElementById('cdLabel').style.display='none';
+      live.style.display='block'; live.textContent='Thank you for visiting';
       return;
     }
     const s=Math.floor(diff/1000);
